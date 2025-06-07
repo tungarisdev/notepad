@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <openssl/evp.h>
+
+#define HASH_SIZE 3     // 24-bit = 3 byte
+#define MAX_INPUTS 1000000
+#define INPUT_LEN 6     // chuỗi 5 ký tự + '\0'
+
+// Hàm tạo chuỗi ngẫu nhiên
+void random_string(char *str, size_t length) {
+    static const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    for (size_t i = 0; i < length - 1; i++) {
+        int key = rand() % (int)(sizeof(charset) - 1);
+        str[i] = charset[key];
+    }
+    str[length - 1] = '\0';
+}
+
+// Hàm băm input -> lấy 3 byte đầu
+void digest24bit(const char *input, unsigned char *out_digest) {
+    unsigned char full_digest[EVP_MAX_MD_SIZE];
+    unsigned int digest_len;
+
+    EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+    EVP_DigestInit_ex(ctx, EVP_md5(), NULL);
+    EVP_DigestUpdate(ctx, input, strlen(input));
+    EVP_DigestFinal_ex(ctx, full_digest, &digest_len);
+    EVP_MD_CTX_free(ctx);
+
+    memcpy(out_digest, full_digest, HASH_SIZE);  // chỉ lấy 3 byte
+}
+
+int main() {
+    srand(time(NULL));
+    unsigned char hash_list[MAX_INPUTS][HASH_SIZE];
+    char *inputs[MAX_INPUTS];
+
+    for (int i = 0; i < MAX_INPUTS; i++) {
+        char *input = malloc(INPUT_LEN);
+        random_string(input, INPUT_LEN);
+
+        unsigned char hash[HASH_SIZE];
+        digest24bit(input, hash);
+
+        // So sánh với các hash đã lưu
+        for (int j = 0; j < i; j++) {
+            if (memcmp(hash, hash_list[j], HASH_SIZE) == 0) {
+                printf("🎉 Collision found after %d tries!\n", i + 1);
+                printf("Input 1: %s\n", inputs[j]);
+                printf("Input 2: %s\n", input);
+                return 0;
+            }
+        }
+
+        memcpy(hash_list[i], hash, HASH_SIZE);
+        inputs[i] = input;
+    }
+
+    printf("❌ No collision found after %d tries.\n", MAX_INPUTS);
+    return 0;
+}
